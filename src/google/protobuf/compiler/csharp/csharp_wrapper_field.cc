@@ -198,6 +198,12 @@ void WrapperFieldGenerator::GenerateCodecCode(io::Printer* printer) {
   }
 }
 
+void WrapperFieldGenerator::GenerateResetCode(io::Printer* printer)
+{
+    printer->Print(variables_,
+        "$property_name$ = default;\n");
+}
+
 void WrapperFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
   WritePropertyDocComment(printer, descriptor_);
   AddDeprecatedFlag(printer);

@@ -257,6 +257,12 @@ void PrimitiveFieldGenerator::GenerateCodecCode(io::Printer* printer) {
     "pb::FieldCodec.For$capitalized_type_name$($tag$, $default_value$)");
 }
 
+void PrimitiveFieldGenerator::GenerateResetCode(io::Printer* printer)
+{
+    printer->Print(variables_,
+        "$name$_ = $default_value$;\n");
+}
+
 void PrimitiveFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
   WritePropertyDocComment(printer, descriptor_);
   AddDeprecatedFlag(printer);
@@ -341,6 +347,12 @@ void PrimitiveOneofFieldGenerator::GenerateParsingCode(io::Printer* printer) {
 void PrimitiveOneofFieldGenerator::GenerateCloningCode(io::Printer* printer) {
   printer->Print(variables_,
     "$property_name$ = other.$property_name$;\n");
+}
+
+void PrimitiveOneofFieldGenerator::GenerateResetCode(io::Printer* printer)
+{
+    printer->Print(variables_,
+        "$property_name$ = default;\n");
 }
 
 }  // namespace csharp

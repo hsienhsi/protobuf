@@ -128,7 +128,7 @@ void MessageGenerator::Generate(io::Printer* printer) {
     printer->Print(vars, "pb::IExtendableMessage<$class_name$>\n");
   }
   else {
-    printer->Print(vars, "pb::IMessage<$class_name$>\n");
+    printer->Print(vars, "pb::IMessage<$class_name$>, pb::IResetObject, pb::IPoolObject\n");
   }
   printer->Print("#if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE\n");
   printer->Print("    , pb::IBufferMessage\n");
@@ -139,7 +139,14 @@ void MessageGenerator::Generate(io::Printer* printer) {
   // All static fields and properties
   printer->Print(
       vars,
-      "private static readonly pb::MessageParser<$class_name$> _parser = new pb::MessageParser<$class_name$>(() => new $class_name$());\n");
+      "private static readonly pb::MessagePool<$class_name$> _pool = new pb::MessagePool<$class_name$>(() => new $class_name$(), 30);\n");
+
+  printer->Print(vars, "public object AllocateFromPool() { return _pool.Allocate(); }\n");
+  printer->Print(vars, "public void FreeToPool() { _pool.Free(this); }\n");
+
+  printer->Print(
+      vars,
+      "private static readonly pb::MessageParser<$class_name$> _parser = new pb::MessageParser<$class_name$>(() => _pool.Allocate());\n");
 
   printer->Print(
       "private pb::UnknownFieldSet _unknownFields;\n");
@@ -169,6 +176,10 @@ void MessageGenerator::Generate(io::Printer* printer) {
   printer->Print(
       vars,
       "public static pb::MessageParser<$class_name$> Parser { get { return _parser; } }\n\n");
+
+  printer->Print(
+      vars,
+      "public static pb::MessagePool<$class_name$> MessagePool { get { return _pool; } }\n\n");
 
   // Access the message descriptor via the relevant file descriptor or containing message descriptor.
   if (!descriptor_->containing_type()) {
@@ -204,6 +215,7 @@ void MessageGenerator::Generate(io::Printer* printer) {
     "partial void OnConstruction();\n\n");
 
   GenerateCloningCode(printer);
+  GenerateResetCode(printer);
   GenerateFreezingCode(printer);
 
   // Fields/properties
@@ -432,6 +444,28 @@ void MessageGenerator::GenerateCloningCode(io::Printer* printer) {
     "public $class_name$ Clone() {\n"
     "  return new $class_name$(this);\n"
     "}\n\n");
+}
+
+void MessageGenerator::GenerateResetCode(io::Printer* printer)
+{
+    std::map<std::string, std::string> vars;
+    WriteGeneratedCodeAttributes(printer);
+    vars["class_name"] = class_name();
+    printer->Print(
+        vars,
+        "public void Reset() {\n");
+    printer->Indent();
+    // Reset non-oneof fields first (treating optional proto3 fields as non-oneof)
+    for (int i = 0; i < descriptor_->field_count(); i++) {
+        const FieldDescriptor* field = descriptor_->field(i);
+        //if (field->real_containing_oneof()) {
+        //    continue;
+        //}
+        std::unique_ptr<FieldGeneratorBase> generator(CreateFieldGeneratorInternal(field));
+        generator->GenerateResetCode(printer);
+    }
+    printer->Outdent();
+    printer->Print("}\n\n");
 }
 
 void MessageGenerator::GenerateFreezingCode(io::Printer* printer) {

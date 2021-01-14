@@ -54,6 +54,7 @@ class PrimitiveFieldGenerator : public FieldGeneratorBase {
   PrimitiveFieldGenerator& operator=(const PrimitiveFieldGenerator&) = delete;
 
   virtual void GenerateCodecCode(io::Printer* printer);
+  virtual void GenerateResetCode(io::Printer* printer);
   virtual void GenerateCloningCode(io::Printer* printer);
   virtual void GenerateMembers(io::Printer* printer);
   virtual void GenerateMergingCode(io::Printer* printer);
@@ -82,6 +83,7 @@ class PrimitiveOneofFieldGenerator : public PrimitiveFieldGenerator {
       delete;
 
   virtual void GenerateCloningCode(io::Printer* printer);
+  virtual void GenerateResetCode(io::Printer* printer);
   virtual void GenerateMembers(io::Printer* printer);
   virtual void GenerateMergingCode(io::Printer* printer);
   virtual void WriteToString(io::Printer* printer);

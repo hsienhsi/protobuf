@@ -48,7 +48,7 @@ namespace Google.Protobuf.Collections
     /// supported by Protocol Buffers but nor does it guarantee that all operations will work in such cases.
     /// </remarks>
     /// <typeparam name="T">The element type of the repeated field.</typeparam>
-    public sealed class RepeatedField<T> : IList<T>, IList, IDeepCloneable<RepeatedField<T>>, IEquatable<RepeatedField<T>>
+    public sealed class RepeatedField<T> : IList<T>, IList, IDeepCloneable<RepeatedField<T>>, IEquatable<RepeatedField<T>>, IResetObject
 #if !NET35
         , IReadOnlyList<T>
 #endif
@@ -693,6 +693,34 @@ namespace Google.Protobuf.Collections
             }
             Remove((T)value);
         }
-        #endregion        
+
+        /// <summary>
+        /// Reset message of fields and free back to pool
+        /// </summary>
+        public void Reset()
+        {
+            if (count > 0)
+            {
+                if (array[0] is IMessage)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        var p = array[i];
+                        array[i] = default;
+                        ((IResetObject)p)?.Reset();
+                        ((IPoolObject)p)?.FreeToPool();                        
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        array[i] = default;
+                    }
+                }
+            }
+            count = 0;
+        }
+        #endregion
     }
 }

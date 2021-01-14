@@ -129,6 +129,12 @@ void RepeatedEnumFieldGenerator::GenerateCloningCode(io::Printer* printer) {
     "$name$_ = other.$name$_.Clone();\n");
 }
 
+void RepeatedEnumFieldGenerator::GenerateResetCode(io::Printer* printer)
+{
+    printer->Print(variables_,
+        "$name$_.Reset();\n");
+}
+
 void RepeatedEnumFieldGenerator::GenerateExtensionCode(io::Printer* printer) {
   WritePropertyDocComment(printer, descriptor_);
   AddDeprecatedFlag(printer);

@@ -68,7 +68,7 @@ namespace Google.Protobuf.Collections
     /// in future versions.
     /// </para>
     /// </remarks>
-    public sealed class MapField<TKey, TValue> : IDeepCloneable<MapField<TKey, TValue>>, IDictionary<TKey, TValue>, IEquatable<MapField<TKey, TValue>>, IDictionary
+    public sealed class MapField<TKey, TValue> : IDeepCloneable<MapField<TKey, TValue>>, IDictionary<TKey, TValue>, IEquatable<MapField<TKey, TValue>>, IDictionary, IResetObject
 #if !NET35
         , IReadOnlyDictionary<TKey, TValue>
 #endif
@@ -564,6 +564,37 @@ namespace Google.Protobuf.Collections
             // This is ugly and slow as heck, but with any luck it will never be used anyway.
             ICollection temp = this.Select(pair => new DictionaryEntry(pair.Key, pair.Value)).ToList();
             temp.CopyTo(array, index);
+        }
+
+        /// <summary>
+        /// Reset Message and free back to pool
+        /// </summary>
+        public void Reset()
+        {
+            if (list.Count > 0)
+            {
+                var first = list.First.Value.Value;
+                if (first is IMessage)
+                {
+                    bool reset = ((IResetObject)first != null);
+                    bool poolobj = ((IPoolObject)first != null);
+
+                    foreach (var entry in list)
+                    {
+                        var p = entry.Value;
+                        if (reset)
+                        {
+                            ((IResetObject)p).Reset();
+                        }
+                        if (poolobj)
+                        {
+                            ((IPoolObject)p).FreeToPool();
+                        }
+                    }
+                }
+
+                Clear();
+            }
         }
 
         bool IDictionary.IsFixedSize { get { return false; } }
